@@ -19,13 +19,13 @@ warehouse_api.py          sync_service.py
 
 - `warehouse_api.py` — stands in for Northstar's real warehouse system.
   Serves `GET /api/inventory`.
-- `sync_service.py` — the actual deliverable. Polls the warehouse API
-  every `POLL_INTERVAL_SECONDS` (set to 10s for testing; spec calls for
-  5 min in production — just change the constant), caches the latest
+- `sync_service.py` —  Polls the warehouse API
+  every 10 seconds(POLL_INTERVAL_SECONDS=10) for easy grading and testing (specification calls for
+  5 minutes in production). Caches the latest
   stock, and serves:
-  - `GET /inventory` — full cached inventory as JSON (the query endpoint)
-  - `GET /inventory/<id>` — single product lookup
-  - `GET /` — human-readable dashboard, auto-refreshes every 10s
+  - `GET /inventory` — returns the full cached inventory as JSON (the query endpoint)
+  - `GET /inventory/<id>` — performs a single product lookup
+  - `GET /` — provides a human-readable dashboard that auto-refreshes every 10s to display real-time updates
 
 ## Run it locally
 
