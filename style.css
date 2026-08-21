@@ -1,0 +1,272 @@
+/* ---- Design tokens ----
+   Palette grounded in warehouse ops signage, not a generic dashboard theme:
+   - near-black slate background (control room, not "clean SaaS white")
+   - amber / green / red pulled straight from warehouse floor signage
+   - monospace for anything that's a "reading" (qty, ids, timestamps),
+     humanist sans for anything that's a "label"
+*/
+:root {
+    --bg: #12161b;
+    --panel: #1a2028;
+    --panel-border: #2a323d;
+    --text: #e7ebee;
+    --text-muted: #8993a1;
+    --accent-blue: #4c9ffe;
+    --accent-green: #3ecf6e;
+    --accent-amber: #e8a33d;
+    --accent-red: #e5484d;
+
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+        radial-gradient(circle at 10% 0%, rgba(76, 159, 254, 0.06), transparent 40%),
+        radial-gradient(circle at 90% 100%, rgba(62, 207, 110, 0.05), transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding: 32px 24px 64px;
+}
+
+/* ---- Top bar ---- */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto 28px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 20px;
+}
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.topbar h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 34px;
+    margin: 0;
+    letter-spacing: 0.01em;
+}
+
+.topbar-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Signature element: the pulse dot fires a ring animation on every
+   successful sync, so a viewer can *see* the poll happen live rather
+   than just trusting a timestamp. */
+.pulse-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    position: relative;
+    flex-shrink: 0;
+}
+.pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--accent-green);
+    opacity: 0.6;
+}
+.pulse-dot.offline { background: var(--accent-red); }
+.pulse-dot.offline::after { background: var(--accent-red); }
+
+.pulse-dot.firing::after {
+    animation: pulse-ring 0.9s ease-out;
+}
+@keyframes pulse-ring {
+    0%   { transform: scale(1);   opacity: 0.6; }
+    100% { transform: scale(3.2); opacity: 0; }
+}
+
+.sync-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+}
+.sync-label { color: var(--text-muted); }
+.sync-time { font-family: var(--font-mono); color: var(--text); }
+
+/* ---- Manifest panel ---- */
+main {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.manifest-panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.manifest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 0.02em;
+}
+
+.poll-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
+.manifest-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.manifest-table th {
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.manifest-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    font-size: 15px;
+}
+
+.manifest-table tr:last-child td { border-bottom: none; }
+
+.manifest-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+.qty-col { text-align: right; }
+
+td.id-cell {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
+td.qty-cell {
+    font-family: var(--font-mono);
+    text-align: right;
+    font-weight: 500;
+}
+
+.status-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+.status-pill.in-stock   { color: var(--accent-green); border-color: rgba(62,207,110,0.35); background: rgba(62,207,110,0.08); }
+.status-pill.low-stock  { color: var(--accent-amber); border-color: rgba(232,163,61,0.35); background: rgba(232,163,61,0.08); }
+.status-pill.out-stock  { color: var(--accent-red);   border-color: rgba(229,72,77,0.35);  background: rgba(229,72,77,0.08); }
+
+.loading-row td {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 28px;
+}
+
+/* row flashes briefly when its quantity changes on a poll */
+tr.changed td { animation: row-flash 1.4s ease-out; }
+@keyframes row-flash {
+    0%   { background: rgba(76, 159, 254, 0.14); }
+    100% { background: transparent; }
+}
+
+/* ---- Summary row ---- */
+.summary-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.summary-chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 8px 14px;
+}
+.summary-chip strong { color: var(--text); font-weight: 600; }
+
+footer {
+    max-width: 900px;
+    margin: 40px auto 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ---- Motion & accessibility floor ---- */
+@media (prefers-reduced-motion: reduce) {
+    .pulse-dot.firing::after,
+    tr.changed td {
+        animation: none !important;
+    }
+}
+
+*:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 600px) {
+    body { padding: 20px 14px 48px; }
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .topbar-right { align-items: flex-start; }
+    .topbar h1 { font-size: 26px; }
+    .manifest-table th:nth-child(1),
+    .manifest-table td:nth-child(1) { display: none; } /* hide ID column on small screens */
+    .manifest-table th, .manifest-table td { padding: 12px 14px; font-size: 14px; }
+}
