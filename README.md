@@ -1,4 +1,4 @@
-# Northstar Inventory Sync (Day 3 — Original Spec)
+# Northstar Inventory Sync 
 
 A live inventory sync service for Northstar Retail Co.'s support tool.
 It polls a warehouse API on a timer, caches the result, and exposes
@@ -46,33 +46,17 @@ Then open:
 ## Starting inventory
 
 | Product ID | Product Name     | Quantity |
-| ---------- | ----------------- | -------- |
-| 1          | Elysia Vanilla     | 12       |
-| 2          | Atheeri            | 8        |
-| 3          | Khair Confection   | 5        |
-| 4          | Yum Yum            | 0        |
-| 5          | Jazaab Gold        | 7        |
+| ---------- | -----------------| -------- |
+| ELYV-001   | Elysia Vanilla   | 12       |
+| ATH-001    | Atheeri          | 8        |
+| KHC-001    | Khair Confection | 5        |
+| YY-001     | Yum Yum          | 0        |
+| JZG-001    | Jazaab Gold      | 7        |
 
 (`warehouse_api.py` randomly nudges quantities on each poll so the
 dashboard has something real to show changing over time.)
 
-## Publishing this to GitHub
 
-```bash
-git init
-git add .
-git commit -m "Day 3: original spec - poll, cache, query endpoint, dashboard"
-git branch -M main
-git remote add origin https://github.com/<your-username>/northstar-inventory-sync.git
-git push -u origin main
-```
 
-Then your shareable link is:
-`https://github.com/<your-username>/northstar-inventory-sync`
 
-## Note on the pivot (Day 4)
 
-This build satisfies the **original spec only**: poll every N seconds,
-cache stock, expose a query endpoint. It intentionally does not yet
-handle a webhook push model — that's the Day 4/5 refactor, tracked
-separately in the Scope Delta Analysis once the pivot lands.
