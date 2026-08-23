@@ -2,7 +2,7 @@
 sync_service.py
 
 This is the actual Day 3 deliverable:
-    1. Poll the warehouse API on a timer (every POLL_INTERVAL_SECONDS)
+    1. Poll the warehouse API on a 10seconds timer (every POLL_INTERVAL_SECONDS=10seconds)
     2. Cache the latest stock in memory (and on disk, so it survives a restart)
     3. Expose a query endpoint so other tools (like the support tool) can
        ask "what's in stock?" without hitting the warehouse API directly
@@ -41,7 +41,7 @@ cache = {
 
 def poll_warehouse():
     """
-    Runs forever in a background thread. Every POLL_INTERVAL_SECONDS,
+    Runs forever in a background thread. Every POLL_INTERVAL_SECONDS=10seconds,
     it asks the warehouse API for the current inventory and updates
     the cache.
     """
