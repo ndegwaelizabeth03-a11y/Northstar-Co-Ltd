@@ -1,14 +1,24 @@
 """
 sync_service.py
 
-This is the actual Day 3 deliverable:
-    1. Poll the warehouse API on a 10seconds timer (every POLL_INTERVAL_SECONDS=10seconds)
-    2. Cache the latest stock in memory (and on disk, so it survives a restart)
-    3. Expose a query endpoint so other tools (like the support tool) can
-       ask "what's in stock?" without hitting the warehouse API directly
-    4. Serve a simple dashboard so a human can see the same thing
+This is the Day 3 deliverable:
 
-Run it with:  python3 sync_service.py
+    1. Poll the warehouse API every 10 seconds.
+    2. If a polling request fails, retry up to 3 times using
+       exponential backoff (1s, 2s, and 4s).
+    3. Cache the latest stock in memory and on disk so it survives
+       a service restart.
+    4. Expose a query endpoint so other tools (like the support tool)
+       can ask "what's in stock?" without hitting the warehouse API
+       directly.
+    5. Serve a simple dashboard so a human can see the same inventory.
+
+If all retries fail, the service keeps serving the last successfully
+cached inventory and continues normal polling.
+
+Run it with:
+    python3 sync_service.py
+
 (make sure warehouse_api.py is already running first)
 
 Dashboard:      http://127.0.0.1:5000/
@@ -25,7 +35,7 @@ from flask import Flask, jsonify, render_template_string
 
 # ---- Config -----------------------------------------------------------
 WAREHOUSE_API_URL = "http://127.0.0.1:5001/api/inventory"
-POLL_INTERVAL_SECONDS = 10   # spec asks for 5 min in production; 10s while testing
+POLL_INTERVAL_SECONDS = 10   # 10s for demonstration and testing
 CACHE_FILE = "cache.json"
 
 # ---- The cache ----------------------------------------------------------
@@ -41,33 +51,73 @@ cache = {
 
 def poll_warehouse():
     """
-    Runs forever in a background thread. Every POLL_INTERVAL_SECONDS=10seconds,
-    it asks the warehouse API for the current inventory and updates
-    the cache.
+    Polls the warehouse API every POLL_INTERVAL_SECONDS.
+
+    If a request fails, retry up to MAX_RETRIES times using
+    exponential backoff before giving up and trying again
+    on the next normal polling cycle.
     """
+
+    MAX_RETRIES = 3
+    INITIAL_BACKOFF_SECONDS = 1
+
     while True:
-        try:
-            response = requests.get(WAREHOUSE_API_URL, timeout=5)
-            response.raise_for_status()
-            items = response.json()
 
-            with cache_lock:
-                cache["items"] = items
-                cache["last_synced"] = datetime.now().isoformat(timespec="seconds")
+        for attempt in range(MAX_RETRIES + 1):
 
-            # Also save to disk so the cache isn't lost if the service restarts
-            with open(CACHE_FILE, "w") as f:
-                json.dump(cache, f, indent=2)
+            try:
+                response = requests.get(
+                    WAREHOUSE_API_URL,
+                    timeout=5
+                )
 
-            print(f"[{cache['last_synced']}] Synced {len(items)} items from warehouse API")
+                response.raise_for_status()
+                items = response.json()
 
-        except requests.exceptions.RequestException as e:
-            # If the warehouse API is down, we keep serving the last good
-            # cache instead of crashing -- that's the whole point of caching.
-            print(f"[warning] Could not reach warehouse API: {e}")
+                # Successful request
+                with cache_lock:
+                    cache["items"] = items
+                    cache["last_synced"] = datetime.now().isoformat(
+                        timespec="seconds"
+                    )
 
+                # Save cache to disk
+                with open(CACHE_FILE, "w") as f:
+                    json.dump(cache, f, indent=2)
+
+                print(
+                    f"[{cache['last_synced']}] "
+                    f"Synced {len(items)} items from warehouse API"
+                )
+
+                # Stop retrying because the request succeeded
+                break
+
+            except requests.exceptions.RequestException as e:
+
+                if attempt < MAX_RETRIES:
+
+                    backoff_time = INITIAL_BACKOFF_SECONDS * (2 ** attempt)
+
+                    print(
+                        f"[warning] Warehouse API request failed: {e}"
+                    )
+                    print(
+                        f"[retry] Attempt {attempt + 1}/{MAX_RETRIES} "
+                        f"in {backoff_time} seconds..."
+                    )
+
+                    time.sleep(backoff_time)
+
+                else:
+
+                    print(
+                        f"[error] All {MAX_RETRIES} retries failed. "
+                        f"Keeping the last good cache."
+                    )
+
+        # Normal polling interval
         time.sleep(POLL_INTERVAL_SECONDS)
-
 
 # ---- The Flask app --------------------------------------------------------
 app = Flask(__name__)
